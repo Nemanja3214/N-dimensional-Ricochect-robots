@@ -44,3 +44,31 @@ std::vector<int> Graph::BFS(const int startVertex, const int endVertex) {
 	}
 	return std::vector<int>();
 }
+
+std::vector<int> Graph::ParallelBFS(const int startVertex, const int endVertex) {
+	std::queue<int> verticesToProcess;
+	// added to cloud
+	std::vector<bool> visited(size, false);
+	verticesToProcess.push(startVertex);
+
+	// remember the nodes that were before visited for path
+	std::vector<int> predecessors(size);
+	int processingVertex;
+
+	while (!verticesToProcess.empty()) {
+		processingVertex = verticesToProcess.front();
+		verticesToProcess.pop();
+
+		for (int neighbour : neighbours[processingVertex]) {
+			if (!visited[neighbour] && neighbour != processingVertex) {
+				visited[neighbour] = true;
+				predecessors[neighbour] = processingVertex;
+				verticesToProcess.push(neighbour);
+			}
+
+			if (neighbour == endVertex)
+				return predecessors;
+		}
+	}
+	return std::vector<int>();
+}
