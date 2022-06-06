@@ -2,6 +2,9 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <mutex>
+#include <tbb/task_group.h>
+#include <set>
 
 class Graph {
 public:
@@ -10,9 +13,11 @@ public:
 	Graph(int size);
 	std::vector<int> BFS(const int startVertex, const int endVertex);
 	std::vector<int> ParallelBFS(const int startVertex, const int endVertex);
+	void MakeCube();
 private:
 	int size;
-	std::vector<std::vector<int>> neighbours;
-	void processVertex(const int processingVertex, std::queue<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found);
-	void processDepth(std::queue<int>& inQueue, std::queue<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found);
+	std::mutex queueMutex;
+	std::vector<std::set<int>> neighbours;
+	void processQueuePart(std::vector<int>& inQueuePart, std::vector<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found);
+
 };
