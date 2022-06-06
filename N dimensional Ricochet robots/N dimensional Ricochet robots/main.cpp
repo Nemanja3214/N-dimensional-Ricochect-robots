@@ -21,6 +21,8 @@ int main() {
 	g.AddEdge(2, 6);
 	g.AddEdge(3, 6);
 	g.AddEdge(6, 7);
+	//g.AddEdge(1, 8);
+	//g.RemoveEdge(6, 7);
 	g.AddEdge(7, 8);
 	vector<int> solution = g.BFS(0, 8);
 	int i = 0;

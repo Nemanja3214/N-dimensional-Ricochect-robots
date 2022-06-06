@@ -13,8 +13,8 @@ void Graph::AddEdge(const int& vertex1, const int& vertex2) {
 void Graph::RemoveEdge(const int& vertex1, const int& vertex2) {
 	if (vertex1 == vertex2)
 		return;
-	std::remove(neighbours[vertex1].begin(), neighbours[vertex1].end(), vertex2);
-	std::remove(neighbours[vertex2].begin(), neighbours[vertex2].end(), vertex1);
+	neighbours[vertex1].erase(std::remove(neighbours[vertex1].begin(), neighbours[vertex1].end(), vertex2));
+	neighbours[vertex2].erase(std::remove(neighbours[vertex2].begin(), neighbours[vertex2].end(), vertex1));
 }
 
 std::vector<int> Graph::BFS(const int startVertex, const int endVertex) {
@@ -42,4 +42,5 @@ std::vector<int> Graph::BFS(const int startVertex, const int endVertex) {
 				return predecessors;
 		}
 	}
+	return std::vector<int>();
 }
