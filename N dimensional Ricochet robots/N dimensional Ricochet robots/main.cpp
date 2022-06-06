@@ -2,18 +2,17 @@
 #include "Graph.h"
 using namespace std;
 
-void printPath(int end, vector<int>& path) {
-	if (end <= 0) {
-		cout << 0;
+void printPath(int start, int end, vector<int>& path) {
+	if (end == start) {
+		cout << end;
 		return;
 	}
 	cout << end << endl;
-	printPath(path[end], path);
+	printPath(start, path[end], path);
 }
 int main() {
-	cout << "Hello" << endl;
-	Graph g(9);
-	g.AddEdge(0, 1);
+	Graph g(27);
+	/*g.AddEdge(0, 1);
 	g.AddEdge(0, 2);
 	g.AddEdge(0, 3);
 	g.AddEdge(1, 4);
@@ -24,8 +23,22 @@ int main() {
 	//g.AddEdge(1, 8);
 	//g.RemoveEdge(6, 7);
 	g.AddEdge(7, 8);
-	vector<int> solution = g.BFS(0, 8);
+	g.AddEdge(8, 9);
+
+	g.AddEdge(0, 10);
+	g.AddEdge(0, 11);
+	g.AddEdge(0, 12);
+	g.AddEdge(0, 13);
+	g.AddEdge(0, 14);*/
+
+	//vector<int> solution = g.BFS(0, 8);
+	//int i = 0;
+	//printPath(solution.size() - 1, solution);
+	g.MakeCube();
+	int startNode = 0;
+	int endNode = 20;
+	vector<int> solution = g.ParallelBFS(startNode, endNode);
 	int i = 0;
-	printPath(solution.size() - 1, solution);
+	printPath(startNode, endNode, solution);
 
 }
