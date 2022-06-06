@@ -12,7 +12,7 @@ void printPath(int end, vector<int>& path) {
 }
 int main() {
 	cout << "Hello" << endl;
-	Graph g(9);
+	Graph g(10);
 	g.AddEdge(0, 1);
 	g.AddEdge(0, 2);
 	g.AddEdge(0, 3);
@@ -24,7 +24,14 @@ int main() {
 	//g.AddEdge(1, 8);
 	//g.RemoveEdge(6, 7);
 	g.AddEdge(7, 8);
-	vector<int> solution = g.BFS(0, 8);
+	g.AddEdge(8, 9);
+
+	//vector<int> solution = g.BFS(0, 8);
+	//int i = 0;
+	//printPath(solution.size() - 1, solution);
+	
+
+	vector<int> solution = g.ParallelBFS(0, 9);
 	int i = 0;
 	printPath(solution.size() - 1, solution);
 

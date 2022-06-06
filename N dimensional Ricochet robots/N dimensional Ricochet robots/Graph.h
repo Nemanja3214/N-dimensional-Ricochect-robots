@@ -13,4 +13,6 @@ public:
 private:
 	int size;
 	std::vector<std::vector<int>> neighbours;
+	void processVertex(const int processingVertex, std::queue<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found);
+	void processDepth(std::queue<int>& inQueue, std::queue<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found);
 };
