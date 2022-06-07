@@ -20,8 +20,10 @@ void printPath(int start, int end, vector<int>& path) {
 
 
 int main() {
+	cout << "Started making graph" << endl;
 	Graph g(1000000);
 	g.LoadGraph("../Input/input.txt");
+	cout << "Finished making graph" << endl;
 	int startNode = 0;
 	int endNode = 25;
 

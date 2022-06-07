@@ -1,5 +1,5 @@
 #include "Graph.h"
-const int CUT_OFF = 600000;
+const int CUT_OFF = 300000;
 
 Graph::Graph(int size): size(size) {
 	neighbours.resize(size);
@@ -33,9 +33,9 @@ std::vector<int> Graph::BFS(const int startVertex, const int endVertex, bool par
 	while (!inQueue.empty()) {
 		// we can't do all at once because we won't know the depth, here each iteration is one depth
 		if(parallel)
-			processQueuePart(inQueue, outQueue, visited, predecessors, endVertex, found);
+			processQueuePart(inQueue.begin(), inQueue.end(), outQueue, visited, predecessors, endVertex, found);
 		else
-			processQueueSerial(inQueue, outQueue, visited, predecessors, endVertex, found);
+			processQueueSerial(inQueue.begin(), inQueue.end(), outQueue, visited, predecessors, endVertex, found);
 		if (found)
 			return predecessors;
 
@@ -47,17 +47,14 @@ std::vector<int> Graph::BFS(const int startVertex, const int endVertex, bool par
 	return std::vector<int>();
 }
 
-void Graph::processQueueSerial(std::vector<int>& inQueuePart, std::vector<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found) {
-	while (!inQueuePart.empty()) {
-		int processingVertex = inQueuePart.back();
-		inQueuePart.pop_back();
-
-		for (int neighbour : neighbours[processingVertex]) {
+void Graph::processQueueSerial(std::vector<int>::iterator currentIt, std::vector<int>::iterator endIt, std::vector<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found) {
+	for (; currentIt != endIt; ++currentIt) {
+		for (int neighbour : neighbours[*currentIt]) {
 			// not dangerous data race
-			if (!visited[neighbour] && neighbour != processingVertex) {
+			if (!visited[neighbour] && neighbour != *currentIt) {
 				visited[neighbour] = true;
 				// also not dangerous because it doesn't matter which one will be predeccesor as long as they are on the same depth
-				predecessors[neighbour] = processingVertex;
+				predecessors[neighbour] = *currentIt;
 
 				std::unique_lock<std::mutex> l(queueMutex);
 				outQueue.push_back(neighbour);
@@ -68,17 +65,15 @@ void Graph::processQueueSerial(std::vector<int>& inQueuePart, std::vector<int>& 
 	}
 }
 
-void Graph::processQueuePart(std::vector<int>& inQueuePart, std::vector<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found) {
-	// can parallel
-	if (inQueuePart.size() < CUT_OFF) {
-		processQueueSerial(inQueuePart, outQueue, visited, predecessors, endVertex, found);
+void Graph::processQueuePart(std::vector<int>::iterator currentIt, std::vector<int>::iterator endIt, std::vector<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found) {
+	int size = endIt - currentIt;
+	if (size < CUT_OFF) {
+		processQueueSerial(currentIt, endIt, outQueue, visited, predecessors, endVertex, found);
 	}
 	else {
 		tbb::task_group tg;
-		std::vector<int> left(inQueuePart.begin(), inQueuePart.begin() + inQueuePart.size() / 2);
-		std::vector<int> right(inQueuePart.begin() + inQueuePart.size() / 2, inQueuePart.end());
-		tg.run([&]() { processQueuePart(left, outQueue, visited, predecessors, endVertex, found); });
-		tg.run([&]() { processQueuePart(right, outQueue, visited, predecessors, endVertex, found); });
+		tg.run([&]() { processQueuePart(currentIt, currentIt + size / 2, outQueue, visited, predecessors, endVertex, found); });
+		tg.run([&]() { processQueuePart(currentIt + size / 2, endIt, outQueue, visited, predecessors, endVertex, found); });
 		tg.wait();
 	}
 	
