@@ -19,5 +19,5 @@ private:
 	std::mutex queueMutex;
 	std::vector<std::set<int>> neighbours;
 	void processQueuePart(std::vector<int>& inQueuePart, std::vector<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found);
-
+	void processQueueSerial(std::vector<int>& inQueuePart, std::vector<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found);
 };

@@ -17,34 +17,29 @@ void Graph::RemoveEdge(const int& vertex1, const int& vertex2) {
 		return;
 	neighbours[vertex1].erase(vertex2);
 	neighbours[vertex2].erase(vertex1);
-	//neighbours[vertex1].erase(std::remove(neighbours[vertex1].begin(), neighbours[vertex1].end(), vertex2));
-	//neighbours[vertex2].erase(std::remove(neighbours[vertex2].begin(), neighbours[vertex2].end(), vertex1));
 }
 
 std::vector<int> Graph::BFS(const int startVertex, const int endVertex) {
-	std::queue<int> verticesToProcess;
+	std::vector<int> inQueue;
+	std::vector<int> outQueue;
 	// added to cloud
 	std::vector<bool> visited(size, false);
-	verticesToProcess.push(startVertex);
+	visited[0] = true;
+	inQueue.push_back(startVertex);
 
 	// remember the nodes that were before visited for path
 	std::vector<int> predecessors(size);
-	int processingVertex;
+	bool found = false;
+	while (!inQueue.empty()) {
+		// we can't do all at once because we won't know the depth, here each iteration is one depth
+		processQueueSerial(inQueue, outQueue, visited, predecessors, endVertex, found);
+		if (found)
+			return predecessors;
 
-	while (!verticesToProcess.empty()) {
-		processingVertex = verticesToProcess.front();
-		verticesToProcess.pop();
-
-		for(int neighbour : neighbours[processingVertex]){
-			if (!visited[neighbour] && neighbour != processingVertex) {
-				visited[neighbour] = true;
-				predecessors[neighbour] = processingVertex;
-				verticesToProcess.push(neighbour);
-			}
-
-			if (neighbour == endVertex)
-				return predecessors;
-		}
+		// outQueue at the end of this iteration becomes inQueue for the next
+		std::swap(outQueue, inQueue);
+		std::vector<int>empty;
+		std::swap(outQueue, empty);
 	}
 	return std::vector<int>();
 }
@@ -74,29 +69,31 @@ std::vector<int> Graph::ParallelBFS(const int startVertex, const int endVertex) 
 	return std::vector<int>();
 }
 
+void Graph::processQueueSerial(std::vector<int>& inQueuePart, std::vector<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found) {
+	while (!inQueuePart.empty()) {
+		int processingVertex = inQueuePart.back();
+		inQueuePart.pop_back();
+
+		for (int neighbour : neighbours[processingVertex]) {
+			// not dangerous data race
+			if (!visited[neighbour] && neighbour != processingVertex) {
+				visited[neighbour] = true;
+				// also not dangerous because it doesn't matter which one will be predeccesor as long as they are on the same depth
+				predecessors[neighbour] = processingVertex;
+
+				std::unique_lock<std::mutex> l(queueMutex);
+				outQueue.push_back(neighbour);
+			}
+			if (neighbour == endVertex)
+				found = true;
+		}
+	}
+}
 
 void Graph::processQueuePart(std::vector<int>& inQueuePart, std::vector<int>& outQueue, std::vector<bool>& visited, std::vector<int>& predecessors, const int endVertex, bool& found) {
 	// can parallel
 	if (inQueuePart.size() < CUT_OFF) {
-		while (!inQueuePart.empty()) {
-			int processingVertex = inQueuePart.back();
-			inQueuePart.pop_back();
-
-			for (int neighbour : neighbours[processingVertex]) {
-				// not dangerous data race
-				if (!visited[neighbour] && neighbour != processingVertex) {
-					visited[neighbour] = true;
-					// also not dangerous because it doesn't matter which one will be predeccesor as long as they are on the same depth
-					predecessors[neighbour] = processingVertex;
-
-					std::unique_lock<std::mutex> l(queueMutex);
-					outQueue.push_back(neighbour);
-				}
-				if (neighbour == endVertex)
-					found = true;
-			}
-		}
-		
+		processQueueSerial(inQueuePart, outQueue, visited, predecessors, endVertex, found);
 	}
 	else {
 		tbb::task_group tg;

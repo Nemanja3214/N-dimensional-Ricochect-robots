@@ -1,10 +1,15 @@
 #include <iostream>
 #include "Graph.h"
+#include <chrono>
 using namespace std;
 
 void printPath(int start, int end, vector<int>& path) {
+	if (path.empty()) {
+		cout << "There is no path between two nodes" << endl;
+		return;
+	}
 	if (end == start) {
-		cout << end;
+		cout << end << endl;
 		return;
 	}
 	cout << end << endl;
@@ -36,9 +41,19 @@ int main() {
 	//printPath(solution.size() - 1, solution);
 	g.MakeCube();
 	int startNode = 0;
-	int endNode = 20;
-	vector<int> solution = g.ParallelBFS(startNode, endNode);
-	int i = 0;
-	printPath(startNode, endNode, solution);
+	int endNode = 25;
+
+
+	auto startTime = chrono::high_resolution_clock::now();
+	vector<int> solutionSerial = g.BFS(startNode, endNode);
+	auto endTime = chrono::high_resolution_clock::now();
+	printPath(startNode, endNode, solutionSerial);
+	cout << "Serial time: " << (endTime - startTime).count() << endl;
+
+	startTime = chrono::high_resolution_clock::now();
+	vector<int> solutionParallel = g.ParallelBFS(startNode, endNode);
+	endTime = chrono::high_resolution_clock::now();
+	printPath(startNode, endNode, solutionParallel);
+	cout << "Parallel time: " << (endTime - startTime).count();
 
 }
