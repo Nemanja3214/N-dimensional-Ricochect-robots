@@ -1,5 +1,5 @@
 #include "Graph.h"
-const int CUT_OFF = 5;
+const int CUT_OFF = 600000;
 
 Graph::Graph(int size): size(size) {
 	neighbours.resize(size);
@@ -19,7 +19,7 @@ void Graph::RemoveEdge(const int& vertex1, const int& vertex2) {
 	neighbours[vertex2].erase(vertex1);
 }
 
-std::vector<int> Graph::BFS(const int startVertex, const int endVertex) {
+std::vector<int> Graph::BFS(const int startVertex, const int endVertex, bool parallel) {
 	std::vector<int> inQueue;
 	std::vector<int> outQueue;
 	// added to cloud
@@ -32,35 +32,13 @@ std::vector<int> Graph::BFS(const int startVertex, const int endVertex) {
 	bool found = false;
 	while (!inQueue.empty()) {
 		// we can't do all at once because we won't know the depth, here each iteration is one depth
-		processQueueSerial(inQueue, outQueue, visited, predecessors, endVertex, found);
+		if(parallel)
+			processQueuePart(inQueue, outQueue, visited, predecessors, endVertex, found);
+		else
+			processQueueSerial(inQueue, outQueue, visited, predecessors, endVertex, found);
 		if (found)
 			return predecessors;
 
-		// outQueue at the end of this iteration becomes inQueue for the next
-		std::swap(outQueue, inQueue);
-		std::vector<int>empty;
-		std::swap(outQueue, empty);
-	}
-	return std::vector<int>();
-}
-
-std::vector<int> Graph::ParallelBFS(const int startVertex, const int endVertex) {
-	std::vector<int> inQueue;
-	std::vector<int> outQueue;
-	// added to cloud
-	std::vector<bool> visited(size, false);
-	visited[0] = true;
-	inQueue.push_back(startVertex);
-
-	// remember the nodes that were before visited for path
-	std::vector<int> predecessors(size);
-	bool found = false;
-	while (!inQueue.empty()) {
-		// we can't do all at once because we won't know the depth, here each iteration is one depth
-		processQueuePart(inQueue, outQueue, visited, predecessors, endVertex, found);
-		if (found)
-			return predecessors;
-			 
 		// outQueue at the end of this iteration becomes inQueue for the next
 		std::swap(outQueue, inQueue);
 		std::vector<int>empty;
@@ -100,11 +78,26 @@ void Graph::processQueuePart(std::vector<int>& inQueuePart, std::vector<int>& ou
 		std::vector<int> left(inQueuePart.begin(), inQueuePart.begin() + inQueuePart.size() / 2);
 		std::vector<int> right(inQueuePart.begin() + inQueuePart.size() / 2, inQueuePart.end());
 		tg.run([&]() { processQueuePart(left, outQueue, visited, predecessors, endVertex, found); });
-		processQueuePart(right, outQueue, visited, predecessors, endVertex, found);
-		//inQueuePart.clear();
+		tg.run([&]() { processQueuePart(right, outQueue, visited, predecessors, endVertex, found); });
 		tg.wait();
 	}
 	
+}
+
+void Graph::LoadGraph(std::string path) {
+	std::ifstream file;
+	std::string line;
+	file.open(path);
+	if (!file) {
+		throw new std::exception("Error while reading file");
+	}
+	int vertex1, vertex2;
+	while (std::getline(file, line)) {
+		std::stringstream linestream(line);
+		file >> vertex1 >> vertex2;
+		AddEdge(vertex1, vertex2);
+	}
+	file.close();
 }
 
 
@@ -165,19 +158,4 @@ void Graph::MakeCube() {
 	this->AddEdge(11, 10);
 	this->AddEdge(11, 14);
 	this->AddEdge(11, 20);
-	
-	/*this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);
-	this->AddEdge(0, 1);*/
-
 }
