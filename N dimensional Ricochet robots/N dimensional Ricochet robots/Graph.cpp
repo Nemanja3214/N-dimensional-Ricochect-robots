@@ -1,5 +1,5 @@
 #include "Graph.h"
-const int CUT_OFF = 300000;
+const int CUT_OFF = 600000;
 
 Graph::Graph(int size): size(size) {
 	neighbours.resize(size);
@@ -24,7 +24,7 @@ std::vector<int> Graph::BFS(const int startVertex, const int endVertex, bool par
 	std::vector<int> outQueue;
 	// added to cloud
 	std::vector<bool> visited(size, false);
-	visited[0] = true;
+	visited[startVertex] = true;
 	inQueue.push_back(startVertex);
 
 	// remember the nodes that were before visited for path
