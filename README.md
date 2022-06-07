@@ -1,2 +1,2 @@
-# N-dimensional-Ricochect-robots
-Parallelized solver for N dimensional board game Ricochet robots
+# Parallel graph BFS
+Parallelized breadth first search in unweighted undirected graphs
