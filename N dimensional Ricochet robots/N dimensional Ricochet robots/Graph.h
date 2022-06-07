@@ -5,15 +5,18 @@
 #include <mutex>
 #include <tbb/task_group.h>
 #include <set>
+#include <string>
+#include <fstream>
+#include <sstream>
 
 class Graph {
 public:
 	void AddEdge(const int& vertex1,const int& vertex2);
 	void RemoveEdge(const int& vertex1, const int& vertex2);
 	Graph(int size);
-	std::vector<int> BFS(const int startVertex, const int endVertex);
-	std::vector<int> ParallelBFS(const int startVertex, const int endVertex);
+	std::vector<int> BFS(const int startVertex, const int endVertex, bool parallel);
 	void MakeCube();
+	void LoadGraph(std::string path);
 private:
 	int size;
 	std::mutex queueMutex;
